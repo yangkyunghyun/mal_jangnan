@@ -230,8 +230,11 @@ const SUPABASE_ANON_KEY = "sb_publishable_nzq8U1pVHpHvVCErqq358w_dzQilZf1";
       await uploadImage(file);
       setStatus("업로드 완료!");
       loadGallery();
-    } catch (err) {
-      setStatus("업로드 실패", true);
+   } catch (err) {
+  console.error(err);
+  setStatus("업로드 실패: " + (err?.message || JSON.stringify(err)), true);
+}
+
     }
     fileInput.value = "";
   };
