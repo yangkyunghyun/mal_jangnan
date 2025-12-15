@@ -1,246 +1,249 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>말장난 쇼핑몰</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>말장난 쇼핑몰</title>
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#000; color:#f00; text-align:center; }
+    .container { padding:40px 20px; }
+    h1 { font-size:48px; margin:0 0 10px; }
+    .horse { width:160px; margin:0 auto 24px; display:block; }
+    button { padding:12px 24px; font-size:18px; cursor:pointer; border:0; background:#f00; color:#000; border-radius:8px; }
+    button:hover { opacity:.85; }
 
-<style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: black;
-    color: red;
-    text-align: center;
-  }
+    #uploadSection { display:none; margin-top:24px; }
+    .row { display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; margin-top:10px; }
+    input[type="password"]{ padding:10px; font-size:14px; width:240px; border-radius:8px; border:1px solid #ff6666; }
+    input[type="file"]{ color:#fff; }
 
-  .container {
-    padding: 40px 20px;
-  }
+    .hint { color:#ff9a9a; font-size:13px; margin-top:8px; }
+    .status { margin-top:10px; font-size:14px; min-height:20px; color:#fff; }
 
-  h1 {
-    font-size: 48px;
-    margin-bottom: 10px;
-  }
+    .gallery { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:16px; padding:20px; max-width:1100px; margin:0 auto 40px; }
+    .card { border:2px solid #f00; border-radius:10px; overflow:hidden; background:#080808; }
+    .card img { width:100%; display:block; }
+    .meta { font-size:12px; color:#ff9a9a; padding:8px 10px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .delete-btn { background:#000; color:#f00; border:1px solid #f00; padding:4px 8px; font-size:12px; cursor:pointer; border-radius:6px; }
+    .delete-btn:hover { opacity:.85; }
 
-  .horse {
-    width: 160px;
-    margin: 0 auto 24px;
-  }
-
-  button {
-    padding: 12px 24px;
-    font-size: 18px;
-    cursor: pointer;
-    border: none;
-    background: red;
-    color: black;
-    border-radius: 8px;
-  }
-
-  #uploadSection {
-    display: none;
-    margin-top: 24px;
-  }
-
-  input {
-    padding: 8px;
-    font-size: 14px;
-    margin: 6px 0;
-  }
-
-  .gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-    padding: 20px;
-    max-width: 1100px;
-    margin: 0 auto 40px;
-  }
-
-  .card {
-    border: 2px solid red;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #080808;
-  }
-
-  .card img {
-    width: 100%;
-    display: block;
-  }
-
-  .meta {
-    font-size: 12px;
-    color: #ff9999;
-    padding: 6px 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .delete-btn {
-    background: black;
-    color: red;
-    border: 1px solid red;
-    padding: 2px 6px;
-    font-size: 11px;
-    cursor: pointer;
-  }
-
-  .status {
-    margin-top: 10px;
-    font-size: 14px;
-    min-height: 20px;
-  }
-</style>
+    .danger { color:#ffb3b3; }
+  </style>
 </head>
-
 <body>
+  <div class="container">
+    <h1>말장난 쇼핑몰</h1>
 
-<div class="container">
-  <h1>말장난 쇼핑몰</h1>
+    <!-- 말 SVG (레포에 horse.svg가 있어야 함) -->
+    <img src="horse.svg" class="horse" alt="말 일러스트" />
 
-  <!-- 말 SVG -->
-<img src="horse.svg" class="horse" alt="말 일러스트">
+    <button id="reportBtn" type="button">제보하기</button>
 
-  <button id="reportBtn">제보하기</button>
+    <div id="uploadSection">
+      <div class="hint">업로드 비밀번호를 입력하면 사진 선택이 활성화돼요.</div>
 
-  <div id="uploadSection">
-    <div>
-      <input id="uploadPw" type="password" placeholder="제보 비밀번호">
+      <div class="row">
+        <input id="uploadPw" type="password" placeholder="업로드 비밀번호" autocomplete="off" />
+        <input id="fileInput" type="file" accept="image/*" disabled />
+      </div>
+
+      <div class="hint">권장: 5MB 이하 / JPG, PNG, WEBP</div>
+      <div class="status" id="status"></div>
     </div>
-    <input id="fileInput" type="file" accept="image/*" disabled>
-    <div class="status" id="status"></div>
   </div>
-</div>
 
-<div class="gallery" id="gallery"></div>
+  <div class="gallery" id="gallery"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  /* ================= 설정 ================= */
-const SUPABASE_URL = "https://bluixwtwlyhuoztusehd.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_nzq8U1pVHpHvVCErqq358w_dzQilZf1";
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    /********************
+     * 1) 여기 4개만 수정!
+     ********************/
+    const SUPABASE_URL = "PASTE_YOUR_PROJECT_URL_HERE";
+    const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_PUBLIC_KEY_HERE";
 
-  const UPLOAD_PASSWORD = "upload123";
-  const ADMIN_PASSWORD  = "admin123";
-  /* ======================================= */
+    const UPLOAD_PASSWORD = "upload123"; // 원하는 값으로 변경
+    const ADMIN_PASSWORD  = "admin123";  // 원하는 값으로 변경
 
-  const supabase = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+    /********************
+     * 2) 공통 DOM
+     ********************/
+    const reportBtn = document.getElementById("reportBtn");
+    const uploadSection = document.getElementById("uploadSection");
+    const uploadPw = document.getElementById("uploadPw");
+    const fileInput = document.getElementById("fileInput");
+    const gallery = document.getElementById("gallery");
+    const statusEl = document.getElementById("status");
 
-  const reportBtn = document.getElementById("reportBtn");
-  const uploadSection = document.getElementById("uploadSection");
-  const fileInput = document.getElementById("fileInput");
-  const uploadPw = document.getElementById("uploadPw");
-  const gallery = document.getElementById("gallery");
-  const statusEl = document.getElementById("status");
-
-  reportBtn.onclick = () => {
-    uploadSection.style.display = "block";
-    uploadSection.scrollIntoView({ behavior: "smooth" });
-  };
-
-  uploadPw.oninput = () => {
-    fileInput.disabled = uploadPw.value !== UPLOAD_PASSWORD;
-  };
-
-  function setStatus(msg, error=false) {
-    statusEl.textContent = msg;
-    statusEl.style.color = error ? "#ffaaaa" : "#aaffaa";
-  }
-
-  function formatDate(d) {
-    return new Date(d).toLocaleString();
-  }
-
-  async function uploadImage(file) {
-    const ext = file.name.split(".").pop();
-    const name = crypto.randomUUID() + "." + ext;
-    const path = "public/" + name;
-
-    const { error: upErr } = await supabase
-      .storage.from("photos")
-      .upload(path, file);
-
-    if (upErr) throw upErr;
-
-    const { error: dbErr } = await supabase
-      .from("photos")
-      .insert({ path });
-
-    if (dbErr) throw dbErr;
-  }
-
-  async function deleteImage(path) {
-    const pw = prompt("관리자 비밀번호를 입력하세요");
-    if (pw !== ADMIN_PASSWORD) {
-      alert("비밀번호가 틀렸습니다");
-      return;
+    function setStatus(msg, isError=false) {
+      statusEl.textContent = msg || "";
+      statusEl.className = "status" + (isError ? " danger" : "");
     }
 
-    await supabase.storage.from("photos").remove([path]);
-    await supabase.from("photos").delete().eq("path", path);
-    loadGallery();
-  }
-
-  async function loadGallery() {
-    const { data } = await supabase
-      .from("photos")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    gallery.innerHTML = "";
-
-    for (const row of data) {
-      const { data: pub } = supabase
-        .storage.from("photos")
-        .getPublicUrl(row.path);
-
-      const card = document.createElement("div");
-      card.className = "card";
-
-      const img = document.createElement("img");
-      img.src = pub.publicUrl;
-
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      meta.innerHTML = `
-        <span>${formatDate(row.created_at)}</span>
-        <button class="delete-btn">삭제</button>
-      `;
-
-      meta.querySelector("button").onclick = () => deleteImage(row.path);
-
-      card.appendChild(img);
-      card.appendChild(meta);
-      gallery.appendChild(card);
+    function formatDate(iso) {
+      try { return new Date(iso).toLocaleString(); }
+      catch { return iso; }
     }
-  }
 
-  fileInput.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
+    /********************
+     * 3) Supabase 클라이언트 생성 (오류 나면 바로 보여줌)
+     ********************/
+    let supabase = null;
     try {
-      setStatus("업로드 중...");
-      await uploadImage(file);
-      setStatus("업로드 완료!");
-      loadGallery();
-   } catch (err) {
-  console.error(err);
-  setStatus("업로드 실패: " + (err?.message || JSON.stringify(err)), true);
-}
-
+      if (!SUPABASE_URL.startsWith("http")) throw new Error("SUPABASE_URL이 비어있거나 형식이 이상해요.");
+      if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.length < 20) throw new Error("SUPABASE_ANON_KEY(anon public key)가 비어있거나 잘못됐어요.");
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+      console.error(e);
+      alert("설정 오류: " + (e.message || e));
+      setStatus("설정 오류: SUPABASE_URL / ANON_KEY를 확인하세요.", true);
     }
-    fileInput.value = "";
-  };
 
-  loadGallery();
-</script>
+    /********************
+     * 4) 버튼/입력 동작 (클릭 안 되는 문제 방지 위해 가장 먼저 붙임)
+     ********************/
+    reportBtn.addEventListener("click", () => {
+      uploadSection.style.display = "block";
+      uploadSection.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
 
+    uploadPw.addEventListener("input", () => {
+      fileInput.disabled = (uploadPw.value !== UPLOAD_PASSWORD);
+    });
+
+    /********************
+     * 5) 업로드/삭제/갤러리
+     ********************/
+    async function uploadImage(file) {
+      // 간단 제한 (작은 프로젝트 안전장치)
+      const maxBytes = 5 * 1024 * 1024;
+      if (file.size > maxBytes) throw new Error("파일이 너무 커요 (5MB 이하로 올려줘).");
+
+      const okTypes = ["image/jpeg","image/png","image/webp","image/gif"];
+      if (!okTypes.includes(file.type)) throw new Error("지원하지 않는 이미지 형식이에요 (JPG/PNG/WEBP/GIF).");
+
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const filename = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + "." + ext;
+      const path = "public/" + filename;
+
+      // 1) Storage 업로드
+      const { error: upErr } = await supabase.storage.from("photos").upload(path, file, {
+        upsert: false,
+        cacheControl: "3600"
+      });
+      if (upErr) throw upErr;
+
+      // 2) DB 기록
+      const { error: dbErr } = await supabase.from("photos").insert({ path });
+      if (dbErr) throw dbErr;
+    }
+
+    async function deleteImage(path) {
+      const pw = prompt("관리자 비밀번호를 입력하세요");
+      if (pw !== ADMIN_PASSWORD) {
+        alert("비밀번호가 틀렸습니다");
+        return;
+      }
+
+      // Storage 삭제
+      const { error: stErr } = await supabase.storage.from("photos").remove([path]);
+      if (stErr) {
+        alert("스토리지 삭제 실패: " + stErr.message);
+        console.error(stErr);
+        return;
+      }
+
+      // DB 삭제
+      const { error: dbErr } = await supabase.from("photos").delete().eq("path", path);
+      if (dbErr) {
+        alert("DB 삭제 실패: " + dbErr.message);
+        console.error(dbErr);
+        return;
+      }
+
+      await loadGallery();
+    }
+
+    async function loadGallery() {
+      if (!supabase) return;
+
+      setStatus("갤러리 불러오는 중...");
+      const { data, error } = await supabase
+        .from("photos")
+        .select("path, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (error) {
+        console.error(error);
+        setStatus("갤러리 로드 실패: " + error.message, true);
+        return;
+      }
+
+      gallery.innerHTML = "";
+
+      for (const row of data) {
+        const { data: pub } = supabase.storage.from("photos").getPublicUrl(row.path);
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const img = document.createElement("img");
+        img.src = pub.publicUrl;
+        img.alt = "업로드된 이미지";
+        img.loading = "lazy";
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const left = document.createElement("span");
+        left.textContent = formatDate(row.created_at);
+
+        const del = document.createElement("button");
+        del.className = "delete-btn";
+        del.type = "button";
+        del.textContent = "삭제";
+        del.addEventListener("click", () => deleteImage(row.path));
+
+        meta.appendChild(left);
+        meta.appendChild(del);
+
+        card.appendChild(img);
+        card.appendChild(meta);
+        gallery.appendChild(card);
+      }
+
+      setStatus("");
+    }
+
+    fileInput.addEventListener("change", async (e) => {
+      if (!supabase) {
+        alert("Supabase 설정이 안 되어 있어요. SUPABASE_URL/ANON_KEY를 넣었는지 확인해줘.");
+        return;
+      }
+
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      try {
+        setStatus("업로드 중...");
+        await uploadImage(file);
+        setStatus("업로드 완료! 갤러리 갱신 중...");
+        await loadGallery();
+        setStatus("완료!");
+      } catch (err) {
+        console.error(err);
+        // 화면+팝업 둘 다 보여줘서 초보도 원인 확인 가능하게
+        const msg = (err && err.message) ? err.message : JSON.stringify(err);
+        setStatus("업로드 실패: " + msg, true);
+        alert("업로드 실패 이유: " + msg);
+      } finally {
+        fileInput.value = "";
+      }
+    });
+
+    // 첫 로드
+    loadGallery();
+  </script>
 </body>
 </html>
